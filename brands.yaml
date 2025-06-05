@@ -1,0 +1,9 @@
+# Example dataset configuration for brand-level detection
+path: ./dataset
+train: train/images
+val: val/images
+names:
+  0: CocaCola
+  1: Pepsi
+  2: Nike
+  3: Apple
