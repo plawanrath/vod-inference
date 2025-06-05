@@ -4,3 +4,5 @@ yolov8s.pt
 downloaded_datasets
 yolov8m.pt
 .DS_Store
+openlogo
+openlogo_yolo
