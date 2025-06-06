@@ -8,6 +8,8 @@ Training:
         --epochs 50 --batch 16 --imgsz 640 --device mps \
         --name openlogo_yolov8m
 
+    python train_brand_yolov8.py --model yolov8m.pt --device mps --epochs 50
+    
 Custom dataset:
     python train_brand_yolov8.py --data path/to/your.yaml ...
 
