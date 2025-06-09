@@ -8,6 +8,9 @@ CLI entry-point: ``product_detect_youtube``  (declared in pyproject.toml)
 Example
     python product_detect_youtube.py --url https://youtu.be/8lgLYGBbDNs --model yolov8s.pt --show --save output/out.mp4
 
+    Fine-tuned
+    python product_detect_youtube.py --url https://youtu.be/8lgLYGBbDNs --model runs/detect/yolov8_brands4/weights/best.pt --show --save output/out.mp4
+    
 The CLI tool streams a YouTube video directly into OpenCV by letting yt-dlp supply a raw MP4/HLS URL that FFmpeg 
 can read frame-by-frame; each frame is fed to a pre-loaded Ultralytics YOLOv8 detector, which 
 performs convolution–BN fusion for speed, runs object detection, and immediately passes the 
@@ -28,8 +31,8 @@ from rich.progress import Progress
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--url",   required=True, help="YouTube link or live URL")
-    p.add_argument("--model", default="yolov8s.pt",
-                   choices=["yolov8n.pt", "yolov8s.pt", "yolov8m.pt"])
+    p.add_argument("--model", default="yolov8s.pt"),
+                   # choices=["yolov8n.pt", "yolov8s.pt", "yolov8m.pt"])
     p.add_argument("--save",  help="Write annotated video to this path")
     p.add_argument("--show",  action="store_true", help="Display live window")
     return p.parse_args()

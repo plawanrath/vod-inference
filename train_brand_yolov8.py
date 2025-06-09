@@ -96,26 +96,54 @@ def _check_yolo_dirs(yaml_path: Path):
 # Train
 # ─────────────────────────────────────────────────────────────────────────────
 def _train(opt: argparse.Namespace):
+    import time
     data_yaml = _auto_dataset_yaml(opt.data, opt.data_root)
     _check_yolo_dirs(data_yaml)
 
-    model = YOLO(opt.model)
     resume_path = Path(f"runs/detect/{opt.name}/weights/last.pt")
-    resume = opt.resume and resume_path.exists()
+    resuming = opt.resume and resume_path.exists()
 
-    print(f"📚  Training {opt.model} on {data_yaml} "
-          f"{'(resume)' if resume else ''} for {opt.epochs} epochs…")
+    # If resuming, initialize YOLO with last.pt and pass resume=True
+    if resuming:
+        print(f"📚  Resuming training from checkpoint {resume_path} on {data_yaml} for {opt.epochs} epochs…")
+        model = YOLO(str(resume_path))
+        resume_arg = True
+    else:
+        print(f"📚  Training {opt.model} on {data_yaml} for {opt.epochs} epochs…")
+        model = YOLO(opt.model)
+        resume_arg = False
 
-    model.train(
-        data=str(data_yaml),
-        epochs=opt.epochs,
-        batch=opt.batch,
-        imgsz=opt.imgsz,
-        device=opt.device,
-        name=opt.name,
-        resume=resume
-    )
-    print("🏁  Training finished.")
+    max_retries = 3
+    attempt = 0
+    while attempt < max_retries:
+        try:
+            model.train(
+                data=str(data_yaml),
+                epochs=opt.epochs,
+                batch=opt.batch,
+                imgsz=opt.imgsz,
+                device=opt.device,
+                name=opt.name,
+                resume=resume_arg
+            )
+            print("🏁  Training finished.")
+            break
+        except RuntimeError as e:
+            print(f"⚠️  RuntimeError during training: {e}")
+            if "shape mismatch" in str(e) or "cannot be broadcast" in str(e):
+                print("⚠️  Detected shape mismatch error. Attempting to resume training from last checkpoint...")
+                if resume_path.exists():
+                    resume = True
+                    attempt += 1
+                    time.sleep(2)
+                    continue
+                else:
+                    print("❌  No checkpoint found to resume from. Exiting.")
+                    break
+            else:
+                raise
+    else:
+        print("❌  Exceeded maximum retries due to repeated shape mismatch errors. Exiting.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
